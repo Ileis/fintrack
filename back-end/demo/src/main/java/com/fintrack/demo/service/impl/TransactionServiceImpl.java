@@ -35,12 +35,16 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction getTransactionById(Long id) {
-        return null;
+        return transactionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found"));
     }
 
     @Override
     public List<Transaction> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
-        return null;
+        if (startDate.isAfter(endDate))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must be before end date");
+
+        return transactionRepository.findByDateAndTimeBetween(startDate, endDate);
     }
 
     @Override
