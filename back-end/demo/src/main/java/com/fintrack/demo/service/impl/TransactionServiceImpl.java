@@ -51,7 +51,10 @@ public class TransactionServiceImpl implements TransactionService {
     public List<Transaction> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate,
             LocalDateTime endDate,
             Long categoryId) {
-        return null;
+        if (startDate.isAfter(endDate))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must be before end date");
+
+        return transactionRepository.findByCategoryAndDateAndTimeBetween(categoryId, startDate, endDate);
     }
 
     @Override
