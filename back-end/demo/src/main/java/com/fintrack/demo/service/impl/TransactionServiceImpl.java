@@ -1,9 +1,12 @@
 package com.fintrack.demo.service.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fintrack.demo.model.Item;
 import com.fintrack.demo.model.Transaction;
@@ -18,12 +21,18 @@ import lombok.RequiredArgsConstructor;
 public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final ItemRepository itemRepository;
-    
+
     @Override
     public Transaction createTransaction(Transaction transaction) {
-        return null;
+        if (transactionRepository.existsById(transaction.getId()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction with the same ID already exists");
+
+        if (transaction.getTotalAmount().compareTo(BigDecimal.ZERO) < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Total amount cannot be negative");
+
+        return transactionRepository.save(transaction);
     }
-    
+
     @Override
     public Transaction getTransactionById(Long id) {
         return null;
@@ -36,8 +45,8 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<Transaction> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate,
-                                                                  LocalDateTime endDate,
-                                                                  Long categoryId) {
+            LocalDateTime endDate,
+            Long categoryId) {
         return null;
     }
 
