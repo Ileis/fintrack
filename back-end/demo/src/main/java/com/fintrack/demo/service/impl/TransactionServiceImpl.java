@@ -27,17 +27,17 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
 
-    private void updateFields(Transaction t, TransactionRequestDTO req) {
-        t.setName(req.name());
-        t.setDescription(req.description());
-        t.setPayee(req.payee());
-        t.setTotalAmount(req.totalAmount());
+    private void updateFields(Transaction t, TransactionRequestDTO dto) {
+        t.setName(dto.name());
+        t.setDescription(dto.description());
+        t.setPayee(dto.payee());
+        t.setTotalAmount(dto.totalAmount());
     }
 
-    private void updateFields(Item i, ItemRequestDTO req) {
-        i.setName(req.name());
-        i.setPrice(req.price());
-        i.setCategory(req.category());
+    private void updateFields(Item i, ItemRequestDTO dto) {
+        i.setName(dto.name());
+        i.setPrice(dto.price());
+        i.setCategory(dto.category());
     }
 
     private TransactionResponseDTO toTransactionResponse(Transaction t) {
@@ -53,17 +53,17 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public TransactionResponseDTO createTransaction(TransactionRequestDTO req) {
+    public TransactionResponseDTO createTransaction(TransactionRequestDTO dto) {
 
-        if (req.totalAmount().compareTo(BigDecimal.ZERO) < 0)
+        if (dto.totalAmount().compareTo(BigDecimal.ZERO) < 0)
             throw new BusinessException("Total amount cannot be negative");
 
         Transaction t = Transaction.builder()
-                .name(req.name())
-                .description(req.description())
+                .name(dto.name())
+                .description(dto.description())
                 .dateAndTime(LocalDateTime.now())
-                .payee(req.payee())
-                .totalAmount(req.totalAmount())
+                .payee(dto.payee())
+                .totalAmount(dto.totalAmount())
                 .build();
 
         t = transactionRepository.save(t);
@@ -99,14 +99,14 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public TransactionResponseDTO updateTransaction(Long id, TransactionRequestDTO req) {
+    public TransactionResponseDTO updateTransaction(Long id, TransactionRequestDTO dto) {
         Transaction t = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
-        if (t.getItemsPriceTotalSum().compareTo(req.totalAmount()) > 0)
+        if (t.getItemsPriceTotalSum().compareTo(dto.totalAmount()) > 0)
             throw new BusinessException("New total amount is less than items price sum");
 
-        updateFields(t, req);
+        updateFields(t, dto);
 
         return toTransactionResponse(transactionRepository.save(t));
     }
@@ -121,19 +121,19 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public Item addItemToTransaction(Long transactionId, ItemRequestDTO req) {
+    public Item addItemToTransaction(Long transactionId, ItemRequestDTO dto) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
         BigDecimal itemAmount = transaction.getItemsPriceTotalSum();
 
-        if (itemAmount.add(req.price()).compareTo(transaction.getTotalAmount()) > 0)
+        if (itemAmount.add(dto.price()).compareTo(transaction.getTotalAmount()) > 0)
             throw new BusinessException("Item amount is greater than transaction amount");
 
         Item i = Item.builder()
-                .name(req.name())
-                .price(req.price())
-                .category(req.category())
+                .name(dto.name())
+                .price(dto.price())
+                .category(dto.category())
                 .build();
 
         transaction.getItems().add(i);
@@ -155,7 +155,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO item) {
+    public Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO itemDto) {
         Transaction t = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
@@ -165,10 +165,10 @@ public class TransactionServiceImpl implements TransactionService {
 
         BigDecimal itemsPriceTotalSum = t.getItemsPriceTotalSum();
 
-        if (itemsPriceTotalSum.subtract(i.getPrice()).add(item.price()).compareTo(t.getTotalAmount()) > 0)
+        if (itemsPriceTotalSum.subtract(i.getPrice()).add(itemDto.price()).compareTo(t.getTotalAmount()) > 0)
             throw new BusinessException("New item value exceeds the transaction total amount");
 
-        updateFields(i, item);
+        updateFields(i, itemDto);
 
         return i;
     }

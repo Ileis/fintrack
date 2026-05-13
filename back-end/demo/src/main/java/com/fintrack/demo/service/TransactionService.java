@@ -10,17 +10,17 @@ import com.fintrack.demo.model.Item;
 import com.fintrack.demo.model.Transaction;
 
 public interface TransactionService {
-    TransactionResponseDTO createTransaction(TransactionRequestDTO transaction);
+    TransactionResponseDTO createTransaction(TransactionRequestDTO dto);
 
     Transaction getTransactionById(Long id);
     List<Transaction> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate);
     List<Transaction> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate, LocalDateTime endDate, Long categoryId);
 
-    TransactionResponseDTO updateTransaction(Long id, TransactionRequestDTO transaction);
+    TransactionResponseDTO updateTransaction(Long id, TransactionRequestDTO dto);
 
     void deleteTransaction(Long id);
 
-    Item addItemToTransaction(Long transactionId, ItemRequestDTO item);
+    Item addItemToTransaction(Long transactionId, ItemRequestDTO dto);
     void removeItemFromTransaction(Long transactionId, Long itemId);
-    Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO item);
+    Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO dtoItem);
 }
