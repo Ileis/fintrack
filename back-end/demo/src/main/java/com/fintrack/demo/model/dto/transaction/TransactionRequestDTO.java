@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import lombok.Builder;
 
 @Builder
-public record TransactionCreateRequestDTO(
+public record TransactionRequestDTO(
     String name,
     String description,
     String payee,

@@ -12,9 +12,8 @@ import com.fintrack.demo.exception.ResourceNotFoundException;
 import com.fintrack.demo.model.Item;
 import com.fintrack.demo.model.Transaction;
 import com.fintrack.demo.model.dto.item.ItemRequestDTO;
-import com.fintrack.demo.model.dto.transaction.TransactionCreateRequestDTO;
+import com.fintrack.demo.model.dto.transaction.TransactionRequestDTO;
 import com.fintrack.demo.model.dto.transaction.TransactionResponseDTO;
-import com.fintrack.demo.model.dto.transaction.TransactionUpdateRequestDTO;
 import com.fintrack.demo.repository.CategoryRepository;
 import com.fintrack.demo.repository.TransactionRepository;
 import com.fintrack.demo.service.TransactionService;
@@ -28,7 +27,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
 
-    private void updateFields(Transaction t, TransactionUpdateRequestDTO req) {
+    private void updateFields(Transaction t, TransactionRequestDTO req) {
         t.setName(req.name());
         t.setDescription(req.description());
         t.setPayee(req.payee());
@@ -48,7 +47,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public TransactionResponseDTO createTransaction(TransactionCreateRequestDTO req) {
+    public TransactionResponseDTO createTransaction(TransactionRequestDTO req) {
 
         if (req.totalAmount().compareTo(BigDecimal.ZERO) < 0)
             throw new BusinessException("Total amount cannot be negative");
@@ -94,8 +93,8 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public TransactionResponseDTO updateTransaction(TransactionUpdateRequestDTO req) {
-        Transaction t = transactionRepository.findById(req.id())
+    public TransactionResponseDTO updateTransaction(Long id, TransactionRequestDTO req) {
+        Transaction t = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
         updateFields(t, req);
