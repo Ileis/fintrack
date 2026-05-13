@@ -11,9 +11,9 @@ import com.fintrack.demo.exception.BusinessException;
 import com.fintrack.demo.exception.ResourceNotFoundException;
 import com.fintrack.demo.model.Item;
 import com.fintrack.demo.model.Transaction;
-import com.fintrack.demo.model.dto.item.ItemRequestDTO;
-import com.fintrack.demo.model.dto.transaction.TransactionRequestDTO;
-import com.fintrack.demo.model.dto.transaction.TransactionResponseDTO;
+import com.fintrack.demo.dto.item.ItemRequestDTO;
+import com.fintrack.demo.dto.transaction.TransactionRequestDTO;
+import com.fintrack.demo.dto.transaction.TransactionResponseDTO;
 import com.fintrack.demo.repository.CategoryRepository;
 import com.fintrack.demo.repository.TransactionRepository;
 import com.fintrack.demo.service.TransactionService;
@@ -32,6 +32,12 @@ public class TransactionServiceImpl implements TransactionService {
         t.setDescription(req.description());
         t.setPayee(req.payee());
         t.setTotalAmount(req.totalAmount());
+    }
+
+    private void updateFields(Item i, ItemRequestDTO req) {
+        i.setName(req.name());
+        i.setPrice(req.price());
+        i.setCategory(req.category());
     }
 
     private TransactionResponseDTO toTransactionResponse(Transaction t) {
@@ -148,6 +154,19 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional
     public Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO item) {
-        return null;
+        Transaction t = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+        Item i = t.getItems().stream()
+                .filter((x) -> x.getId().equals(itemId)).findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Item is not in Transaction"));
+
+        if (t.getItems().stream().filter((x) -> !x.getId().equals(itemId)).map(Item::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add).add(item.price()).compareTo(t.getTotalAmount()) > 0)
+            throw new BusinessException("New item value exceeds the transaction total amount");
+
+        updateFields(i, item);
+
+        return i;
     }
 }
