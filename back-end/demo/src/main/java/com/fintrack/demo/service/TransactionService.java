@@ -5,19 +5,23 @@ import java.util.List;
 
 import com.fintrack.demo.model.Item;
 import com.fintrack.demo.model.Transaction;
+import com.fintrack.demo.model.dto.item.ItemRequestDTO;
+import com.fintrack.demo.model.dto.transaction.TransactionCreateRequestDTO;
+import com.fintrack.demo.model.dto.transaction.TransactionResponseDTO;
+import com.fintrack.demo.model.dto.transaction.TransactionUpdateRequestDTO;
 
 public interface TransactionService {
-    Transaction createTransaction(Transaction transaction);
+    TransactionResponseDTO createTransaction(TransactionCreateRequestDTO transaction);
 
     Transaction getTransactionById(Long id);
     List<Transaction> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate);
     List<Transaction> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate, LocalDateTime endDate, Long categoryId);
 
-    Transaction updateTransaction(Transaction transaction);
+    TransactionResponseDTO updateTransaction(TransactionUpdateRequestDTO transaction);
 
     void deleteTransaction(Long id);
 
-    Transaction addItemToTransaction(Long transactionId, Item item);
-    Transaction removeItemFromTransaction(Long transactionId, Long itemId);
-    Transaction updateItemInTransaction(Long transactionId, Item item);
+    Item addItemToTransaction(Long transactionId, ItemRequestDTO item);
+    void removeItemFromTransaction(Long transactionId, Long itemId);
+    Item updateItemInTransaction(Long transactionId, ItemRequestDTO item);
 }

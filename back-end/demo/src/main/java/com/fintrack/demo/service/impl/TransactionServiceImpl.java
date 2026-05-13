@@ -3,21 +3,22 @@ package com.fintrack.demo.service.impl;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale.Category;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.fintrack.demo.exception.BusinessException;
 import com.fintrack.demo.exception.ResourceNotFoundException;
 import com.fintrack.demo.model.Item;
 import com.fintrack.demo.model.Transaction;
+import com.fintrack.demo.model.dto.item.ItemRequestDTO;
+import com.fintrack.demo.model.dto.transaction.TransactionCreateRequestDTO;
+import com.fintrack.demo.model.dto.transaction.TransactionResponseDTO;
+import com.fintrack.demo.model.dto.transaction.TransactionUpdateRequestDTO;
 import com.fintrack.demo.repository.CategoryRepository;
-import com.fintrack.demo.repository.ItemRepository;
 import com.fintrack.demo.repository.TransactionRepository;
 import com.fintrack.demo.service.TransactionService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -25,17 +26,42 @@ import lombok.RequiredArgsConstructor;
 public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
-    private final ItemRepository itemRepository;
+
+    private void updateFields(Transaction t, TransactionUpdateRequestDTO req) {
+        t.setName(req.name());
+        t.setDescription(req.description());
+        t.setPayee(req.payee());
+        t.setTotalAmount(req.totalAmount());
+    }
+
+    private TransactionResponseDTO toTransactionResponse(Transaction t) {
+        return TransactionResponseDTO.builder()
+                .id(t.getId())
+                .name(t.getName())
+                .description(t.getDescription())
+                .dateAndTime(t.getDateAndTime())
+                .payee(t.getPayee())
+                .totalAmount(t.getTotalAmount())
+                .build();
+    }
 
     @Override
-    public Transaction createTransaction(Transaction transaction) {
-        if (transaction.getId() != null)
-            throw new IllegalArgumentException("New transaction cannot have an ID");
+    @Transactional
+    public TransactionResponseDTO createTransaction(TransactionCreateRequestDTO req) {
 
-        if (transaction.getTotalAmount().compareTo(BigDecimal.ZERO) < 0)
-            throw new IllegalArgumentException("Total amount cannot be negative");
+        if (req.totalAmount().compareTo(BigDecimal.ZERO) < 0)
+            throw new BusinessException("Total amount cannot be negative");
 
-        return transactionRepository.save(transaction);
+        Transaction t = Transaction.builder()
+                .name(req.name())
+                .description(req.description())
+                .dateAndTime(LocalDateTime.now())
+                .payee(req.payee())
+                .totalAmount(req.totalAmount())
+                .build();
+
+        t = transactionRepository.save(t);
+        return toTransactionResponse(t);
     }
 
     @Override
@@ -47,7 +73,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<Transaction> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
         if (startDate.isAfter(endDate))
-            throw new BusinessException("start date must be before end date");
+            throw new BusinessException("Start date must be before end date");
 
         return transactionRepository.findByDateAndTimeBetween(startDate, endDate);
     }
@@ -57,35 +83,68 @@ public class TransactionServiceImpl implements TransactionService {
             LocalDateTime endDate,
             Long categoryId) {
         if (startDate.isAfter(endDate))
-            throw new BusinessException("start date must be before end date");
+            throw new BusinessException("Start date must be before end date");
 
-        if (categoryRepository.findById(categoryId).isEmpty())
+        if (!categoryRepository.existsById(categoryId))
             throw new ResourceNotFoundException("Category do not exists");
 
         return transactionRepository.findByCategoryAndDateAndTimeBetween(categoryId, startDate, endDate);
     }
 
     @Override
-    public Transaction updateTransaction(Transaction transaction) {
-        return null;
+    @Transactional
+    public TransactionResponseDTO updateTransaction(TransactionUpdateRequestDTO req) {
+        Transaction t = transactionRepository.findById(req.id())
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+        updateFields(t, req);
+
+        return toTransactionResponse(transactionRepository.save(t));
     }
 
     @Override
     public void deleteTransaction(Long id) {
+        if (!transactionRepository.existsById(id))
+            throw new ResourceNotFoundException("Transaction not found");
+        transactionRepository.deleteById(id);
     }
 
     @Override
-    public Transaction addItemToTransaction(Long transactionId, Item item) {
-        return null;
+    public Item addItemToTransaction(Long transactionId, ItemRequestDTO req) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+        BigDecimal itemAmount = transaction.getItems().stream().map(Item::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (itemAmount.add(req.price()).compareTo(transaction.getTotalAmount()) > 0)
+            throw new BusinessException("Item amount is greater than transaction amount");
+
+        Item i = Item.builder()
+                .name(req.name())
+                .price(req.price())
+                .category(req.category())
+                .build();
+
+        transaction.getItems().add(i);
+
+        transactionRepository.save(transaction);
+
+        return i;
     }
 
     @Override
-    public Transaction removeItemFromTransaction(Long transactionId, Long itemId) {
-        return null;
+    @Transactional
+    public void removeItemFromTransaction(Long transactionId, Long itemId) {
+        Transaction t = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+        if (!t.getItems().removeIf((item) -> item.getId().equals(itemId)))
+            throw new ResourceNotFoundException("Item not found");
     }
 
     @Override
-    public Transaction updateItemInTransaction(Long transactionId, Item item) {
+    public Item updateItemInTransaction(Long transactionId, ItemRequestDTO item) {
         return null;
     }
 }
