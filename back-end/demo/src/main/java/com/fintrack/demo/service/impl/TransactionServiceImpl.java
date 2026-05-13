@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fintrack.demo.exception.BusinessException;
 import com.fintrack.demo.exception.ResourceNotFoundException;
@@ -18,11 +19,11 @@ import com.fintrack.demo.repository.CategoryRepository;
 import com.fintrack.demo.repository.TransactionRepository;
 import com.fintrack.demo.service.TransactionService;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
@@ -103,6 +104,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public void deleteTransaction(Long id) {
         if (!transactionRepository.existsById(id))
             throw new ResourceNotFoundException("Transaction not found");
@@ -110,6 +112,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public Item addItemToTransaction(Long transactionId, ItemRequestDTO req) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
@@ -144,6 +147,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public Item updateItemInTransaction(Long transactionId, ItemRequestDTO item) {
         return null;
     }
