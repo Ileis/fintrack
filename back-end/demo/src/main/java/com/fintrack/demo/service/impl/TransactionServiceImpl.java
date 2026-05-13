@@ -147,7 +147,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public Item updateItemInTransaction(Long transactionId, ItemRequestDTO item) {
+    public Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO item) {
         return null;
     }
 }

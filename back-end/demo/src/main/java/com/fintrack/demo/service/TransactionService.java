@@ -22,5 +22,5 @@ public interface TransactionService {
 
     Item addItemToTransaction(Long transactionId, ItemRequestDTO item);
     void removeItemFromTransaction(Long transactionId, Long itemId);
-    Item updateItemInTransaction(Long transactionId, ItemRequestDTO item);
+    Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO item);
 }
