@@ -1,4 +1,4 @@
-package com.fintrack.demo.model.dto.transaction;
+package com.fintrack.demo.dto.transaction;
 
 import java.math.BigDecimal;
 

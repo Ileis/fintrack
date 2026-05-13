@@ -3,11 +3,11 @@ package com.fintrack.demo.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fintrack.demo.dto.item.ItemRequestDTO;
+import com.fintrack.demo.dto.transaction.TransactionRequestDTO;
+import com.fintrack.demo.dto.transaction.TransactionResponseDTO;
 import com.fintrack.demo.model.Item;
 import com.fintrack.demo.model.Transaction;
-import com.fintrack.demo.model.dto.item.ItemRequestDTO;
-import com.fintrack.demo.model.dto.transaction.TransactionRequestDTO;
-import com.fintrack.demo.model.dto.transaction.TransactionResponseDTO;
 
 public interface TransactionService {
     TransactionResponseDTO createTransaction(TransactionRequestDTO transaction);

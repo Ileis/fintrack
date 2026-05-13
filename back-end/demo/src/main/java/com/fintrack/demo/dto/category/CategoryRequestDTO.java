@@ -1,4 +1,4 @@
-package com.fintrack.demo.model.dto.category;
+package com.fintrack.demo.dto.category;
 
 import com.fintrack.demo.model.enums.TypeCategory;
 
