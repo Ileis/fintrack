@@ -73,7 +73,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Transaction getTransactionById(Long id) {
         return transactionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction do not exists"));
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction does not exists"));
     }
 
     @Override
@@ -103,6 +103,9 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction t = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
+        if (t.getItemsPriceTotalSum().compareTo(req.totalAmount()) > 0)
+            throw new BusinessException("New total amount is less than items price sum");
+
         updateFields(t, req);
 
         return toTransactionResponse(transactionRepository.save(t));
@@ -122,8 +125,7 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
-        BigDecimal itemAmount = transaction.getItems().stream().map(Item::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal itemAmount = transaction.getItemsPriceTotalSum();
 
         if (itemAmount.add(req.price()).compareTo(transaction.getTotalAmount()) > 0)
             throw new BusinessException("Item amount is greater than transaction amount");
@@ -161,8 +163,9 @@ public class TransactionServiceImpl implements TransactionService {
                 .filter((x) -> x.getId().equals(itemId)).findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Item is not in Transaction"));
 
-        if (t.getItems().stream().filter((x) -> !x.getId().equals(itemId)).map(Item::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add).add(item.price()).compareTo(t.getTotalAmount()) > 0)
+        BigDecimal itemsPriceTotalSum = t.getItemsPriceTotalSum();
+
+        if (itemsPriceTotalSum.subtract(i.getPrice()).add(item.price()).compareTo(t.getTotalAmount()) > 0)
             throw new BusinessException("New item value exceeds the transaction total amount");
 
         updateFields(i, item);

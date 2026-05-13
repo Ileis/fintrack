@@ -58,4 +58,9 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    public BigDecimal getItemsPriceTotalSum() {
+        if (this.items == null) return BigDecimal.ZERO;
+        return this.items.stream().map(Item::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }
