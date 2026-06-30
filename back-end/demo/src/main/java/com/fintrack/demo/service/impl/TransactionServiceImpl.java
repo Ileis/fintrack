@@ -45,14 +45,14 @@ public class TransactionServiceImpl implements TransactionService {
                 .id(t.getId())
                 .name(t.getName())
                 .description(t.getDescription())
-                .dateAndTime(t.getDateAndTime())
+                .dateTime(t.getDateTime())
                 .payee(t.getPayee())
                 .totalAmount(t.getTotalAmount())
                 .build();
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public TransactionResponseDTO createTransaction(TransactionRequestDTO dto) {
 
         if (dto.totalAmount().compareTo(BigDecimal.ZERO) < 0)
@@ -61,31 +61,32 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction t = Transaction.builder()
                 .name(dto.name())
                 .description(dto.description())
-                .dateAndTime(LocalDateTime.now())
+                .dateTime((dto.dateTime() != null) ? dto.dateTime() : LocalDateTime.now())
                 .payee(dto.payee())
                 .totalAmount(dto.totalAmount())
                 .build();
 
-        t = transactionRepository.save(t);
-        return toTransactionResponse(t);
+        return toTransactionResponse(transactionRepository.save(t));
     }
 
     @Override
-    public Transaction getTransactionById(Long id) {
+    public TransactionResponseDTO getTransactionById(Long id) {
         return transactionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction does not exists"));
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction does not exists")).toResponseDTO();
     }
 
     @Override
-    public List<Transaction> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
+    public List<TransactionResponseDTO> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
         if (startDate.isAfter(endDate))
             throw new BusinessException("Start date must be before end date");
 
-        return transactionRepository.findByDateAndTimeBetween(startDate, endDate);
+        List<Transaction> transactions = transactionRepository.findByDateTimeBetween(startDate, endDate);
+
+        return transactions.stream().map(t -> t.toResponseDTO()).toList();
     }
 
     @Override
-    public List<Transaction> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate,
+    public List<TransactionResponseDTO> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate,
             LocalDateTime endDate,
             Long categoryId) {
         if (startDate.isAfter(endDate))
@@ -94,11 +95,11 @@ public class TransactionServiceImpl implements TransactionService {
         if (!categoryRepository.existsById(categoryId))
             throw new ResourceNotFoundException("Category do not exists");
 
-        return transactionRepository.findByCategoryAndDateAndTimeBetween(categoryId, startDate, endDate);
+        return transactionRepository.findByCategoryAndDateTimeBetween(categoryId, startDate, endDate).stream().map(t -> t.toResponseDTO()).toList();
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public TransactionResponseDTO updateTransaction(Long id, TransactionRequestDTO dto) {
         Transaction t = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
@@ -112,7 +113,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public void deleteTransaction(Long id) {
         if (!transactionRepository.existsById(id))
             throw new ResourceNotFoundException("Transaction not found");
@@ -120,7 +121,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public Item addItemToTransaction(Long transactionId, ItemRequestDTO dto) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
@@ -144,7 +145,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public void removeItemFromTransaction(Long transactionId, Long itemId) {
         Transaction t = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
@@ -154,7 +155,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public Item updateItemInTransaction(Long transactionId, Long itemId, ItemRequestDTO itemDto) {
         Transaction t = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));

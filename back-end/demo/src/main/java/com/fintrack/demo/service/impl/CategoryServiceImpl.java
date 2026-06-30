@@ -28,7 +28,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public Category createCategory(CategoryRequestDTO dto) {
         Category c = new Category();
         updateFields(c, dto);
@@ -48,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public Category updateCategory(Long id, CategoryRequestDTO dto) {
         Category c = categoryRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
@@ -59,7 +59,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = false)
     public void deleteCategory(Long id) {
         if (categoryRepository.existsById(id))
             throw new ResourceNotFoundException("Category not found");

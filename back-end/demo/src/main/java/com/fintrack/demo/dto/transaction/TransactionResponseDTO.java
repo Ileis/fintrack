@@ -10,7 +10,7 @@ public record TransactionResponseDTO(
     Long id,
     String name,
     String description,
-    LocalDateTime dateAndTime,
+    LocalDateTime dateTime,
     String payee,
     BigDecimal totalAmount
 ) { }

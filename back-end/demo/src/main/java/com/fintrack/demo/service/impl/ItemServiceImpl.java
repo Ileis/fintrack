@@ -32,7 +32,7 @@ public class ItemServiceImpl implements ItemService {
         if (startDate.isAfter(endDate))
             throw new IllegalArgumentException("Start date is after end date");
 
-        return itemRepository.findByDateAndTimeBetween(startDate, endDate);
+        return itemRepository.findByDateTimeBetween(startDate, endDate);
     }
 
     @Override
@@ -43,6 +43,6 @@ public class ItemServiceImpl implements ItemService {
         if (!categoryRepository.existsById(categoryId))
             throw new ResourceNotFoundException("Item not found");
 
-        return itemRepository.findByCategoryAndDateAndTimeBetween(categoryId, startDate, endDate);
+        return itemRepository.findByCategoryAndDateTimeBetween(categoryId, startDate, endDate);
     }
 }

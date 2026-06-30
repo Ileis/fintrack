@@ -7,14 +7,13 @@ import com.fintrack.demo.dto.item.ItemRequestDTO;
 import com.fintrack.demo.dto.transaction.TransactionRequestDTO;
 import com.fintrack.demo.dto.transaction.TransactionResponseDTO;
 import com.fintrack.demo.model.Item;
-import com.fintrack.demo.model.Transaction;
 
 public interface TransactionService {
     TransactionResponseDTO createTransaction(TransactionRequestDTO dto);
 
-    Transaction getTransactionById(Long id);
-    List<Transaction> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate);
-    List<Transaction> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate, LocalDateTime endDate, Long categoryId);
+    TransactionResponseDTO getTransactionById(Long id);
+    List<TransactionResponseDTO> getTransactionsByPeriod(LocalDateTime startDate, LocalDateTime endDate);
+    List<TransactionResponseDTO> getTransactionsByPeriodAndCategoryId(LocalDateTime startDate, LocalDateTime endDate, Long categoryId);
 
     TransactionResponseDTO updateTransaction(Long id, TransactionRequestDTO dto);
 
